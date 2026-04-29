@@ -1,17 +1,15 @@
-/* ============================
-   التطبيق العام - App
-   ============================ */
+/* ============================================================
+   متجر نوڤا - تطبيق عام: أيقونات، helpers، quick add، search
+   ============================================================ */
 
 let _iconsRefreshing = false;
 let _iconsScheduled = false;
 
-// إعادة إنشاء أيقونات Lucide بعد تحديث DOM (آمن من الحلقة اللانهائية)
 function refreshIcons() {
   if (!window.lucide) return;
   if (_iconsRefreshing) return;
   _iconsRefreshing = true;
   try { lucide.createIcons(); } catch(e) {}
-  // give the DOM a moment before allowing next refresh
   setTimeout(() => { _iconsRefreshing = false; }, 50);
 }
 
@@ -24,62 +22,170 @@ function scheduleIconsRefresh() {
   });
 }
 
-// Helper: تنسيق السعر
+/* =============== Helpers =============== */
 function formatPrice(price) {
-  return new Intl.NumberFormat('ar-SA', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
-  }).format(price);
+  return new Intl.NumberFormat('ar-SA', { maximumFractionDigits: 0 }).format(Math.round(Number(price) || 0));
 }
 
-// Helper: نجوم التقييم
-function renderStars(rating, size = 14) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  let html = '<div class="stars" aria-label="تقييم ' + rating + '">';
-  for (let i = 0; i < 5; i++) {
-    let cls = 'text-ink-300';
-    if (i < full) cls = 'text-amber-400 fill-amber-400';
-    else if (i === full && half) cls = 'text-amber-400';
-    html += `<i data-lucide="star" class="${cls}" style="width:${size}px;height:${size}px"></i>`;
+function safeProductFromButton(btn) {
+  // Read product data from data-* attributes (safe, no eval)
+  return {
+    id: Number(btn.dataset.productId),
+    name: btn.dataset.productName || '',
+    price: Number(btn.dataset.productPrice) || 0,
+    oldPrice: btn.dataset.productOldPrice ? Number(btn.dataset.productOldPrice) : undefined,
+    image: btn.dataset.productImage || '',
+    categoryAr: btn.dataset.productCategory || '',
+    stock: Number(btn.dataset.productStock) || 99
+  };
+}
+
+/* =============== Global delegated events =============== */
+document.addEventListener('click', (e) => {
+  // Add to cart from any [data-add-to-cart] button
+  const cartBtn = e.target.closest('[data-add-to-cart]');
+  if (cartBtn) {
+    e.preventDefault();
+    const product = safeProductFromButton(cartBtn);
+    if (product.id) Cart.add(product, 1);
+    return;
   }
-  html += '</div>';
-  return html;
-}
 
-// Add to cart helper from product card
-function addToCartFromCard(productJson) {
-  try {
-    const product = typeof productJson === 'string' ? JSON.parse(productJson) : productJson;
-    Cart.add(product, 1);
-  } catch(e) {
-    console.error('Failed to add to cart', e);
-    showToast('حدث خطأ، يرجى المحاولة مرة أخرى', 'error');
+  // Toggle wishlist from any [data-wishlist-toggle] button
+  const wishBtn = e.target.closest('[data-wishlist-toggle]');
+  if (wishBtn) {
+    e.preventDefault();
+    const product = safeProductFromButton(wishBtn);
+    if (product.id) {
+      const added = Wishlist.toggle(product);
+      wishBtn.classList.toggle('active', added);
+      const heart = wishBtn.querySelector('[data-lucide="heart"]');
+      if (heart) heart.setAttribute('fill', added ? 'currentColor' : 'none');
+    }
   }
-}
-window.addToCartFromCard = addToCartFromCard;
-
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-  refreshIcons();
 });
 
-// Observe DOM changes — only refresh icons when *new* nodes are added that contain
-// data-lucide attribute. Skip mutations caused by lucide itself (it replaces <i> with <svg>).
+/* =============== Mobile Drawer =============== */
+function toggleDrawer(open) {
+  const drawer = document.getElementById('mobile-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+  if (!drawer || !backdrop) return;
+  const isOpen = open !== undefined ? open : !drawer.classList.contains('open');
+  drawer.classList.toggle('open', isOpen);
+  backdrop.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+window.toggleDrawer = toggleDrawer;
+
+/* =============== Search Suggestions (live) =============== */
+let _searchTimer = null;
+async function fetchSearchSuggestions(query) {
+  if (!query || query.length < 2) return [];
+  try {
+    const r = await fetch(`/api/products?q=${encodeURIComponent(query)}&limit=6`);
+    const data = await r.json();
+    return data.ok ? data.items : [];
+  } catch {
+    return [];
+  }
+}
+
+function setupSearchSuggestions() {
+  const inputs = document.querySelectorAll('[data-search-input]');
+  inputs.forEach(input => {
+    const dropdown = input.closest('form')?.querySelector('[data-search-dropdown]');
+    if (!dropdown) return;
+    input.addEventListener('input', () => {
+      clearTimeout(_searchTimer);
+      const q = input.value.trim();
+      if (q.length < 2) { dropdown.classList.remove('open'); return; }
+      _searchTimer = setTimeout(async () => {
+        const items = await fetchSearchSuggestions(q);
+        renderSearchDropdown(dropdown, items, q);
+      }, 200);
+    });
+    input.addEventListener('focus', () => {
+      if (input.value.trim().length >= 2) dropdown.classList.add('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!input.closest('form').contains(e.target)) dropdown.classList.remove('open');
+    });
+  });
+}
+
+function renderSearchDropdown(dropdown, items, q) {
+  dropdown.innerHTML = '';
+  if (items.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'p-6 text-center text-sm text-ink-500';
+    empty.textContent = `لا توجد نتائج لـ "${q}"`;
+    dropdown.appendChild(empty);
+    dropdown.classList.add('open');
+    return;
+  }
+  items.forEach(p => {
+    const a = document.createElement('a');
+    a.href = `/product/${p.id}`;
+    a.className = 'search-result';
+    const img = document.createElement('img');
+    img.src = p.image; img.alt = p.name; img.loading = 'lazy';
+    const info = document.createElement('div');
+    info.className = 'flex-1 min-w-0';
+    const name = document.createElement('div');
+    name.className = 'font-semibold text-sm text-ink-900 line-clamp-1';
+    name.textContent = p.name;
+    const cat = document.createElement('div');
+    cat.className = 'text-xs text-ink-500 mt-0.5';
+    cat.textContent = p.categoryAr;
+    info.append(name, cat);
+    const price = document.createElement('div');
+    price.className = 'font-bold text-sm text-brand-600 flex-shrink-0';
+    price.textContent = formatPrice(p.price) + ' ر.س';
+    a.append(img, info, price);
+    dropdown.appendChild(a);
+  });
+  // "view all" link
+  const viewAll = document.createElement('a');
+  viewAll.href = `/products?q=${encodeURIComponent(q)}`;
+  viewAll.className = 'block text-center text-xs font-bold text-brand-600 hover:text-brand-700 py-2 mt-1 border-t border-ink-100';
+  viewAll.textContent = `عرض كل النتائج لـ "${q}"`;
+  dropdown.appendChild(viewAll);
+  dropdown.classList.add('open');
+}
+
+/* =============== Mark wishlist buttons on page load =============== */
+function markWishlistButtons() {
+  document.querySelectorAll('[data-wishlist-toggle]').forEach(btn => {
+    const id = Number(btn.dataset.productId);
+    if (Wishlist.has(id)) {
+      btn.classList.add('active');
+      const heart = btn.querySelector('[data-lucide="heart"]');
+      if (heart) heart.setAttribute('fill', 'currentColor');
+    }
+  });
+}
+
+/* =============== DOM Init =============== */
+document.addEventListener('DOMContentLoaded', () => {
+  refreshIcons();
+  setupSearchSuggestions();
+  markWishlistButtons();
+});
+
+document.addEventListener('wishlist:updated', () => {
+  setTimeout(markWishlistButtons, 50);
+});
+
+/* =============== Mutation Observer for icons =============== */
 const observer = new MutationObserver((mutations) => {
   let hasNewIconElement = false;
   for (const m of mutations) {
     if (m.type !== 'childList') continue;
     for (const node of m.addedNodes) {
       if (node.nodeType !== 1) continue;
-      // Skip svg replacements done by lucide
       if (node.tagName === 'svg' || node.tagName === 'SVG') continue;
-      if (node.hasAttribute && node.hasAttribute('data-lucide')) {
-        hasNewIconElement = true; break;
-      }
-      if (node.querySelector && node.querySelector('[data-lucide]')) {
-        hasNewIconElement = true; break;
-      }
+      if (node.hasAttribute && node.hasAttribute('data-lucide')) { hasNewIconElement = true; break; }
+      if (node.querySelector && node.querySelector('[data-lucide]')) { hasNewIconElement = true; break; }
     }
     if (hasNewIconElement) break;
   }
@@ -96,4 +202,3 @@ if (document.body) {
 
 window.refreshIcons = refreshIcons;
 window.formatPrice = formatPrice;
-window.renderStars = renderStars;
