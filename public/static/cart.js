@@ -187,6 +187,14 @@ const Wishlist = {
     document.dispatchEvent(new CustomEvent('wishlist:updated'));
   },
   count() { return this.getIds().length; },
+  // alias for wishlist page
+  read() { return this.getItems(); },
+  clear() {
+    localStorage.removeItem(WISHLIST_KEY);
+    localStorage.removeItem(WISHLIST_KEY + '_full');
+    this.updateBadge();
+    document.dispatchEvent(new CustomEvent('wishlist:updated'));
+  },
   updateBadge() {
     const badges = document.querySelectorAll('[data-wishlist-badge]');
     const count = this.count();
