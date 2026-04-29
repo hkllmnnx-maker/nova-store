@@ -161,7 +161,7 @@ export const AdminPage: FC = () => {
           </div>
 
           {/* === Orders Tab === */}
-          <div x-show="tab === 'orders'" x-cloak class="p-5">
+          <div x-show="tab === 'orders'" {...{ "x-cloak": "" }} class="p-5">
             <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
               <div class="flex items-center gap-2">
                 <select x-model="orderStatusFilter" class="form-input h-10 text-sm w-auto pr-8">
@@ -232,7 +232,7 @@ export const AdminPage: FC = () => {
           </div>
 
           {/* === Analytics Tab === */}
-          <div x-show="tab === 'analytics'" x-cloak class="p-5">
+          <div x-show="tab === 'analytics'" {...{ "x-cloak": "" }} class="p-5">
             <div class="grid md:grid-cols-2 gap-4 mb-5">
               {/* Sales by Category */}
               <div class="bg-ink-50 rounded-2xl p-5">
@@ -305,9 +305,9 @@ export const AdminPage: FC = () => {
         </div>
 
         {/* Product Modal */}
-        <div x-show="modalOpen" x-cloak class="fixed inset-0 z-[200] flex items-center justify-center p-4" {...{ 'x-transition.opacity': '' }}>
+        <div x-show="modalOpen" {...{ "x-cloak": "" }} class="fixed inset-0 z-[200] flex items-center justify-center p-4" {...{ 'x-transition.opacity': '' }}>
           <div class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" {...{ '@click': 'modalOpen = false' }}></div>
-          <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" x-transition>
+          <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" {...{ "x-transition": "" }}>
             <div class="flex items-center justify-between p-6 border-b border-ink-100">
               <h3 class="font-display font-black text-xl text-ink-900" x-text="editingProduct.id ? 'تعديل منتج' : 'إضافة منتج جديد'"></h3>
               <button {...{ '@click': 'modalOpen = false' }} class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-ink-100 text-ink-500">

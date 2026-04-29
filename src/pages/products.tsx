@@ -79,7 +79,7 @@ export const ProductsPage: FC<ProductsPageProps> = ({ category, q, sort = 'newes
                 <i data-lucide="chevron-down" class="w-4 h-4" x-bind:class="mobileOpen ? 'rotate-180' : ''" style="transition: transform 0.2s"></i>
               </button>
 
-              <div class="lg:!block" x-show="mobileOpen || isLargeScreen" x-transition>
+              <div class="lg:!block" {...{ 'x-show': 'mobileOpen || isLargeScreen', 'x-transition': '' }}>
                 {/* Search */}
                 <div class="bg-white rounded-2xl border border-ink-100 p-5 mb-4">
                   <h3 class="font-bold text-sm text-ink-900 mb-3 flex items-center gap-2">

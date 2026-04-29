@@ -41,7 +41,7 @@ export const CheckoutPage: FC = () => {
         </div>
 
         {/* Empty Cart State */}
-        <div x-show="items.length === 0" x-cloak class="bg-white rounded-2xl border border-ink-100 p-12 text-center">
+        <div x-show="items.length === 0" {...{ "x-cloak": "" }} class="bg-white rounded-2xl border border-ink-100 p-12 text-center">
           <div class="inline-flex w-20 h-20 rounded-2xl bg-amber-50 items-center justify-center mb-4">
             <i data-lucide="alert-triangle" class="w-10 h-10 text-amber-500"></i>
           </div>
@@ -53,7 +53,7 @@ export const CheckoutPage: FC = () => {
           </a>
         </div>
 
-        <form x-show="items.length > 0" x-cloak {...{ '@submit.prevent': 'placeOrder()' }} class="grid lg:grid-cols-[1fr,400px] gap-6">
+        <form x-show="items.length > 0" {...{ "x-cloak": "" }} {...{ '@submit.prevent': 'placeOrder()' }} class="grid lg:grid-cols-[1fr,400px] gap-6">
           {/* Forms Column */}
           <div class="space-y-5">
             {/* Customer Info */}
@@ -144,17 +144,17 @@ export const CheckoutPage: FC = () => {
                   { id: 'cod', label: 'الدفع عند الاستلام', icon: 'banknote', desc: 'ادفع نقداً عند التوصيل' }
                 ].map(method => (
                   <label class="block cursor-pointer">
-                    <input type="radio" x-model="form.payment" {...{ ':value': '\'${method.id}\'' }} class="peer sr-only" />
-                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-ink-200 peer-checked:border-brand-500 peer-checked:bg-brand-50 transition-all" x-bind:class="form.payment === '${method.id}' ? 'border-brand-500 bg-brand-50' : ''">
+                    <input type="radio" name="payment" value={method.id} x-model="form.payment" class="peer sr-only" />
+                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-ink-200 peer-checked:border-brand-500 peer-checked:bg-brand-50 transition-all" {...{ 'x-bind:class': `form.payment === '${method.id}' ? 'border-brand-500 bg-brand-50' : ''` }}>
                       <div class="w-10 h-10 rounded-lg bg-white border border-ink-200 flex items-center justify-center text-ink-700">
-                        <i data-lucide="${method.icon}" class="w-5 h-5"></i>
+                        <i data-lucide={method.icon} class="w-5 h-5"></i>
                       </div>
                       <div class="flex-1">
-                        <div class="font-bold text-sm text-ink-900">${method.label}</div>
-                        <div class="text-xs text-ink-500">${method.desc}</div>
+                        <div class="font-bold text-sm text-ink-900">{method.label}</div>
+                        <div class="text-xs text-ink-500">{method.desc}</div>
                       </div>
-                      <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors" x-bind:class="form.payment === '${method.id}' ? 'border-brand-500 bg-brand-500' : 'border-ink-300'">
-                        <span x-show="form.payment === '${method.id}'" class="w-2 h-2 rounded-full bg-white"></span>
+                      <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors" {...{ 'x-bind:class': `form.payment === '${method.id}' ? 'border-brand-500 bg-brand-500' : 'border-ink-300'` }}>
+                        <span {...{ 'x-show': `form.payment === '${method.id}'` }} class="w-2 h-2 rounded-full bg-white"></span>
                       </div>
                     </div>
                   </label>
@@ -162,7 +162,7 @@ export const CheckoutPage: FC = () => {
               </div>
 
               {/* Card Details (shown only if card payment selected) */}
-              <div x-show="form.payment === 'card'" x-transition class="mt-5 pt-5 border-t border-ink-100 grid sm:grid-cols-2 gap-4">
+              <div x-show="form.payment === 'card'" {...{ "x-transition": "" }} class="mt-5 pt-5 border-t border-ink-100 grid sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2">
                   <label class="form-label">رقم البطاقة</label>
                   <div class="relative">

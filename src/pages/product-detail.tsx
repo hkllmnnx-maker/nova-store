@@ -221,7 +221,7 @@ export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
           </div>
 
           {/* Specs Tab */}
-          <div x-show="tab === 'specs'" x-transition>
+          <div x-show="tab === 'specs'" {...{ "x-transition": "" }}>
             <div class="grid md:grid-cols-2 gap-3">
               {product.specs.map(s => (
                 <div class="flex items-center justify-between p-3 rounded-xl bg-ink-50">
@@ -233,7 +233,7 @@ export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
           </div>
 
           {/* Reviews Tab */}
-          <div x-show="tab === 'reviews'" x-transition x-cloak>
+          <div x-show="tab === 'reviews'" {...{ "x-transition": "" }} {...{ "x-cloak": "" }}>
             <div class="grid md:grid-cols-[280px,1fr] gap-8">
               {/* Rating Summary */}
               <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 text-center">
@@ -284,7 +284,7 @@ export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
           </div>
 
           {/* Shipping Tab */}
-          <div x-show="tab === 'shipping'" x-transition x-cloak>
+          <div x-show="tab === 'shipping'" {...{ "x-transition": "" }} {...{ "x-cloak": "" }}>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="bg-ink-50 rounded-xl p-5">
                 <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center mb-3">

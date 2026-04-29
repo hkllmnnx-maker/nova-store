@@ -27,7 +27,7 @@ export const OrderSuccessPage: FC<{ orderId?: string }> = ({ orderId }) => {
           <div class="flex items-center justify-between flex-wrap gap-3 pb-5 border-b border-ink-100 mb-5">
             <div>
               <div class="text-xs text-ink-500 font-medium mb-1">رقم الطلب</div>
-              <div class="font-display font-black text-2xl text-ink-900" x-text="order ? order.id : '{orderId || 'NV-XXXXXX'}'">{orderId || 'NV-XXXXXX'}</div>
+              <div class="font-display font-black text-2xl text-ink-900" x-text={`order ? order.id : '${orderId || 'NV-XXXXXX'}'`}>{orderId || 'NV-XXXXXX'}</div>
             </div>
             <div class="text-left">
               <div class="text-xs text-ink-500 font-medium mb-1">تاريخ الطلب</div>
