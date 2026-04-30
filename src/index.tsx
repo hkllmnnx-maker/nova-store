@@ -21,7 +21,39 @@ app.use('*', async (c, next) => {
   c.header('X-Content-Type-Options', 'nosniff')
   c.header('X-Frame-Options', 'SAMEORIGIN')
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
-  c.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+  c.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(self), interest-cohort=()')
+  c.header('X-XSS-Protection', '1; mode=block')
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  // Content-Security-Policy: allow our own origin + the trusted CDNs we use (fonts, icons, alpine, unsplash images)
+  c.header(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com",
+      "connect-src 'self'",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+    ].join('; ')
+  )
+})
+
+// === Cache headers for static-like API responses (catalog data) ===
+app.use('/api/products*', async (c, next) => {
+  await next()
+  if (c.req.method === 'GET') {
+    c.header('Cache-Control', 'public, max-age=60, s-maxage=300')
+  }
+})
+app.use('/api/categories*', async (c, next) => {
+  await next()
+  if (c.req.method === 'GET') {
+    c.header('Cache-Control', 'public, max-age=300, s-maxage=600')
+  }
 })
 
 // === API Routes ===
@@ -100,21 +132,25 @@ app.notFound((c) => {
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>404 - الصفحة غير موجودة | متجر نوڤا</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-  <style>body{font-family:'Cairo',sans-serif}</style>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>body{font-family:'Cairo','Tajawal',system-ui,sans-serif}</style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4">
-  <div class="text-center max-w-md">
-    <div class="font-black text-9xl bg-gradient-to-br from-sky-500 to-fuchsia-500 bg-clip-text text-transparent mb-4">404</div>
+<body class="min-h-screen flex items-center justify-center p-4" style="background:linear-gradient(135deg,#f8fafc 0%,#ffffff 50%,#f0f9ff 100%)">
+  <main class="text-center max-w-md" role="main">
+    <div class="font-black text-9xl gradient-text mb-4" aria-hidden="true">404</div>
     <h1 class="text-3xl font-black text-slate-900 mb-3">الصفحة غير موجودة</h1>
     <p class="text-slate-600 mb-6">عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.</p>
-    <div class="flex items-center justify-center gap-3">
-      <a href="/" class="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors">العودة للرئيسية</a>
-      <a href="/products" class="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">تصفّح المنتجات</a>
-    </div>
-  </div>
+    <nav class="flex items-center justify-center gap-3" aria-label="روابط بديلة">
+      <a href="/" class="btn btn-dark">العودة للرئيسية</a>
+      <a href="/products" class="btn btn-secondary">تصفّح المنتجات</a>
+    </nav>
+  </main>
 </body>
 </html>`, 404)
 })

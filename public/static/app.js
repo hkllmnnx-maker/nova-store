@@ -40,6 +40,55 @@ function safeProductFromButton(btn) {
   };
 }
 
+/* =============== Sanitize JSON product payload from inline onclick =============== */
+function _parseProductJSON(payload) {
+  try {
+    // payload arrives already-decoded by the browser (HTML entities → real chars)
+    const raw = typeof payload === 'string' ? payload : '';
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== 'object') return null;
+    return {
+      id: Number(obj.id) || 0,
+      name: String(obj.name || '').slice(0, 200),
+      price: Number(obj.price) || 0,
+      oldPrice: obj.oldPrice ? Number(obj.oldPrice) : undefined,
+      image: String(obj.image || '').slice(0, 500),
+      categoryAr: String(obj.categoryAr || '').slice(0, 100),
+      stock: Number(obj.stock) || 99
+    };
+  } catch {
+    return null;
+  }
+}
+
+/* =============== Inline-onclick helpers (used by product-card) =============== */
+function addToCartFromCard(payload) {
+  const p = _parseProductJSON(payload);
+  if (!p || !p.id) return;
+  if (window.Cart && typeof window.Cart.add === 'function') {
+    window.Cart.add(p, 1);
+  }
+}
+
+function toggleWishlistFromCard(payload) {
+  const p = _parseProductJSON(payload);
+  if (!p || !p.id) return;
+  if (window.Wishlist && typeof window.Wishlist.toggle === 'function') {
+    const added = window.Wishlist.toggle(p);
+    // Update only the buttons that match this product id
+    document.querySelectorAll(`.js-wishlist-btn[data-product-id="${p.id}"]`).forEach((btn) => {
+      btn.classList.toggle('active', !!added);
+      btn.setAttribute('aria-pressed', added ? 'true' : 'false');
+      const heart = btn.querySelector('[data-lucide="heart"]');
+      if (heart) heart.setAttribute('fill', added ? 'currentColor' : 'none');
+    });
+  }
+}
+
+window.addToCartFromCard = addToCartFromCard;
+window.toggleWishlistFromCard = toggleWishlistFromCard;
+
 /* =============== Global delegated events =============== */
 document.addEventListener('click', (e) => {
   // Add to cart from any [data-add-to-cart] button
@@ -155,13 +204,16 @@ function renderSearchDropdown(dropdown, items, q) {
 
 /* =============== Mark wishlist buttons on page load =============== */
 function markWishlistButtons() {
-  document.querySelectorAll('[data-wishlist-toggle]').forEach(btn => {
+  if (!window.Wishlist) return;
+  const selector = '[data-wishlist-toggle], .js-wishlist-btn';
+  document.querySelectorAll(selector).forEach(btn => {
     const id = Number(btn.dataset.productId);
-    if (Wishlist.has(id)) {
-      btn.classList.add('active');
-      const heart = btn.querySelector('[data-lucide="heart"]');
-      if (heart) heart.setAttribute('fill', 'currentColor');
-    }
+    if (!id) return;
+    const active = window.Wishlist.has(id);
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const heart = btn.querySelector('[data-lucide="heart"]');
+    if (heart) heart.setAttribute('fill', active ? 'currentColor' : 'none');
   });
 }
 

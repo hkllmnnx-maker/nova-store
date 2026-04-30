@@ -243,9 +243,7 @@ api.post('/orders', async (c) => {
   if (!city) return c.json({ ok: false, error: 'invalid_city' }, 400)
   if (address.length < 10) return c.json({ ok: false, error: 'invalid_address' }, 400)
 
-  // إعادة حساب التوتالات على السيرفر
-  const calcReq = await fetch('http://localhost' /* dummy */).catch(() => null)
-  // نستخدم الدالة مباشرة بدلاً من fetch لتجنّب CF Workers limitations
+  // إعادة حساب التوتالات على السيرفر مباشرة (لا نثق بأسعار العميل)
   const items = Array.isArray(body?.items) ? body.items.slice(0, 50) : []
   const validated = []
   for (const it of items) {

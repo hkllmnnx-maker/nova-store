@@ -27,48 +27,25 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <meta name="robots" content="index, follow" />
         <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
 
-        <script src="https://cdn.tailwindcss.com"></script>
-
+        {/* Performance: preconnect to remote font/icon hosts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+        <link rel="preconnect" href="https://unpkg.com" crossorigin />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+
         <link
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&display=swap"
           rel="stylesheet"
         />
 
-        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
+        {/* Local pre-compiled Tailwind CSS (no CDN in production) */}
         <link rel="stylesheet" href="/static/style.css" />
 
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-          tailwind.config = {
-            theme: {
-              extend: {
-                fontFamily: {
-                  sans: ['Cairo','Tajawal','system-ui','sans-serif'],
-                  display: ['Cairo','sans-serif']
-                },
-                colors: {
-                  brand: { 50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1',800:'#075985',900:'#0c4a6e',950:'#082f49' },
-                  accent: { 50:'#fdf4ff',100:'#fae8ff',200:'#f5d0fe',300:'#f0abfc',400:'#e879f9',500:'#d946ef',600:'#c026d3',700:'#a21caf',800:'#86198f',900:'#701a75' },
-                  ink:    { 50:'#f8fafc',100:'#f1f5f9',200:'#e2e8f0',300:'#cbd5e1',400:'#94a3b8',500:'#64748b',600:'#475569',700:'#334155',800:'#1e293b',900:'#0f172a',950:'#020617' }
-                },
-                boxShadow: {
-                  soft: '0 2px 15px -3px rgba(0,0,0,.07), 0 10px 20px -2px rgba(0,0,0,.04)',
-                  card: '0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.05)',
-                  cardHover: '0 24px 60px -16px rgba(15,23,42,.18), 0 8px 20px -10px rgba(14,165,233,.15)',
-                  glow: '0 0 30px rgba(14,165,233,.3)',
-                  glowAccent: '0 0 30px rgba(217,70,239,.3)'
-                }
-              }
-            }
-          }
-        `
-          }}
-        ></script>
+        {/* Defer non-critical UI scripts so they don't block rendering */}
+        <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
       </head>
       <body class="font-sans bg-ink-50 text-ink-900 antialiased">
         {/* === Top Bar === */}
