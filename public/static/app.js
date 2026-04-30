@@ -123,8 +123,25 @@ function toggleDrawer(open) {
   drawer.classList.toggle('open', isOpen);
   backdrop.classList.toggle('open', isOpen);
   document.body.style.overflow = isOpen ? 'hidden' : '';
+  drawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  if (isOpen) {
+    // focus the close button for keyboard users
+    const closeBtn = drawer.querySelector('[aria-label="إغلاق"]');
+    if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
+  }
 }
 window.toggleDrawer = toggleDrawer;
+
+/* Close drawer / search dropdowns on Escape */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const drawer = document.getElementById('mobile-drawer');
+  if (drawer && drawer.classList.contains('open')) {
+    toggleDrawer(false);
+    return;
+  }
+  document.querySelectorAll('[data-search-dropdown].open').forEach((d) => d.classList.remove('open'));
+});
 
 /* =============== Search Suggestions (live) =============== */
 let _searchTimer = null;

@@ -48,8 +48,16 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
       </head>
       <body class="font-sans bg-ink-50 text-ink-900 antialiased">
+        {/* === Skip link for keyboard / screen-reader users === */}
+        <a
+          href="#main-content"
+          class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-[300] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-ink-900 focus:text-white focus:font-semibold focus:shadow-xl"
+        >
+          تخطّى إلى المحتوى
+        </a>
+
         {/* === Top Bar === */}
-        <div class="hidden md:block bg-ink-950 text-white text-xs">
+        <div class="hidden md:block bg-ink-950 text-white text-xs" role="complementary" aria-label="معلومات الاتصال">
           <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
             <div class="flex items-center gap-5 text-ink-300">
               <span class="flex items-center gap-1.5">
@@ -118,7 +126,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
               </div>
 
               {/* Nav Links - Desktop */}
-              <nav class="hidden xl:flex items-center gap-1">
+              <nav class="hidden xl:flex items-center gap-1" aria-label="القائمة الرئيسية">
                 <a
                   href="/"
                   class={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${currentPage === 'home' ? 'text-brand-600 bg-brand-50' : 'text-ink-700 hover:text-brand-600 hover:bg-ink-50'}`}
@@ -244,8 +252,8 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         </header>
 
         {/* === Mobile Drawer === */}
-        <div id="drawer-backdrop" class="drawer-backdrop" onclick="toggleDrawer(false)"></div>
-        <aside id="mobile-drawer" class="drawer">
+        <div id="drawer-backdrop" class="drawer-backdrop" onclick="toggleDrawer(false)" aria-hidden="true"></div>
+        <aside id="mobile-drawer" class="drawer" role="dialog" aria-modal="true" aria-label="القائمة الجانبية">
           <div class="p-5 border-b border-ink-100 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
               <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center text-white font-black">N</div>
@@ -256,7 +264,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
             </button>
           </div>
 
-          <nav class="p-3">
+          <nav class="p-3" aria-label="قائمة التنقّل في الجوّال">
             <a href="/" class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-ink-800 hover:bg-ink-50">
               <i data-lucide="home" class="w-4 h-4 text-brand-500"></i>
               <span>الرئيسية</span>
@@ -316,7 +324,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         </aside>
 
         {/* === Main === */}
-        <main>{children}</main>
+        <main id="main-content" tabindex="-1">{children}</main>
 
         {/* === Footer === */}
         <footer class="mt-20 bg-ink-950 text-ink-300 relative overflow-hidden">
@@ -420,9 +428,14 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         </footer>
 
         {/* Toast Container */}
-        <div id="toast-container"></div>
+        <div id="toast-container" role="region" aria-live="polite" aria-label="إشعارات"></div>
 
-        {/* Scripts */}
+        {/*
+          Scripts loaded synchronously at end-of-body so window.Cart / window.Wishlist
+          are defined BEFORE Alpine.js (loaded via defer in <head>) executes its
+          DOMContentLoaded init callbacks. Placing them here also avoids blocking
+          first paint (browser already rendered all preceding markup).
+        */}
         <script src="/static/cart.js"></script>
         <script src="/static/app.js"></script>
       </body>

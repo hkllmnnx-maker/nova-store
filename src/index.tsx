@@ -24,12 +24,15 @@ app.use('*', async (c, next) => {
   c.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(self), interest-cohort=()')
   c.header('X-XSS-Protection', '1; mode=block')
   c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-  // Content-Security-Policy: allow our own origin + the trusted CDNs we use (fonts, icons, alpine, unsplash images)
+  // Content-Security-Policy: allow our own origin + the trusted CDNs we use (fonts, icons, alpine, unsplash images).
+  // Note: 'unsafe-eval' is required by Alpine.js runtime expression evaluation (x-data, x-show, x-bind, etc.).
+  // This is a deliberate trade-off: we accept the relaxed script-src to keep Alpine working, while still
+  // restricting all other directives (img/font/connect/frame-ancestors/object) tightly.
   c.header(
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com",
