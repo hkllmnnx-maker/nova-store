@@ -430,6 +430,50 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         {/* Toast Container */}
         <div id="toast-container" role="region" aria-live="polite" aria-label="إشعارات"></div>
 
+        {/* === Global Confirm Dialog (replaces window.confirm) === */}
+        <div
+          id="confirm-dialog-backdrop"
+          class="fixed inset-0 z-[300] bg-ink-950/60 backdrop-blur-sm hidden items-center justify-center p-4"
+          role="presentation"
+        >
+          <div
+            id="confirm-dialog"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-200"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-dialog-title"
+            aria-describedby="confirm-dialog-message"
+          >
+            <div class="p-6">
+              <div class="flex items-start gap-4">
+                <div id="confirm-dialog-icon" class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-amber-50 text-amber-600">
+                  <i data-lucide="alert-triangle" class="w-6 h-6" aria-hidden="true"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 id="confirm-dialog-title" class="font-display font-black text-lg text-ink-900 mb-2">تأكيد</h3>
+                  <p id="confirm-dialog-message" class="text-sm text-ink-600 leading-relaxed"></p>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 py-4 bg-ink-50/60 border-t border-ink-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                id="confirm-dialog-cancel"
+                class="h-10 px-5 rounded-xl border border-ink-200 hover:bg-white text-ink-700 font-semibold text-sm transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                id="confirm-dialog-confirm"
+                class="h-10 px-5 rounded-xl bg-ink-900 hover:bg-ink-800 text-white font-bold text-sm transition-colors"
+              >
+                تأكيد
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/*
           Scripts loaded synchronously at end-of-body so window.Cart / window.Wishlist
           are defined BEFORE Alpine.js (loaded via defer in <head>) executes its

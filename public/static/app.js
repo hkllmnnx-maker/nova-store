@@ -271,3 +271,134 @@ if (document.body) {
 
 window.refreshIcons = refreshIcons;
 window.formatPrice = formatPrice;
+
+/* =============== Global Confirm Dialog (replaces window.confirm) =============== */
+let _confirmDialogState = {
+  onConfirm: null,
+  onCancel: null,
+  previouslyFocused: null,
+  keyHandler: null
+};
+
+function _closeConfirmDialog(triggerCancel) {
+  const backdrop = document.getElementById('confirm-dialog-backdrop');
+  const dialog = document.getElementById('confirm-dialog');
+  if (!backdrop || !dialog) return;
+
+  dialog.classList.remove('scale-100', 'opacity-100');
+  dialog.classList.add('scale-95', 'opacity-0');
+
+  setTimeout(() => {
+    backdrop.classList.add('hidden');
+    backdrop.classList.remove('flex');
+    document.body.style.overflow = '';
+  }, 180);
+
+  if (_confirmDialogState.keyHandler) {
+    document.removeEventListener('keydown', _confirmDialogState.keyHandler);
+    _confirmDialogState.keyHandler = null;
+  }
+  if (_confirmDialogState.previouslyFocused && typeof _confirmDialogState.previouslyFocused.focus === 'function') {
+    try { _confirmDialogState.previouslyFocused.focus(); } catch(e) {}
+  }
+
+  if (triggerCancel && typeof _confirmDialogState.onCancel === 'function') {
+    try { _confirmDialogState.onCancel(); } catch (e) {}
+  }
+  _confirmDialogState.onConfirm = null;
+  _confirmDialogState.onCancel = null;
+}
+
+function openConfirmDialog(opts) {
+  const o = opts || {};
+  const backdrop = document.getElementById('confirm-dialog-backdrop');
+  const dialog = document.getElementById('confirm-dialog');
+  const titleEl = document.getElementById('confirm-dialog-title');
+  const msgEl = document.getElementById('confirm-dialog-message');
+  const iconWrap = document.getElementById('confirm-dialog-icon');
+  const cancelBtn = document.getElementById('confirm-dialog-cancel');
+  const confirmBtn = document.getElementById('confirm-dialog-confirm');
+
+  if (!backdrop || !dialog || !titleEl || !msgEl || !cancelBtn || !confirmBtn) {
+    // Fallback in case the layout dialog is missing
+    if (window.confirm(String(o.message || 'هل أنت متأكد؟'))) {
+      if (typeof o.onConfirm === 'function') o.onConfirm();
+    } else {
+      if (typeof o.onCancel === 'function') o.onCancel();
+    }
+    return;
+  }
+
+  titleEl.textContent = String(o.title || 'تأكيد');
+  msgEl.textContent = String(o.message || 'هل أنت متأكد؟');
+  cancelBtn.textContent = String(o.cancelText || 'إلغاء');
+  confirmBtn.textContent = String(o.confirmText || 'تأكيد');
+
+  // Style the confirm button based on destructive flag
+  confirmBtn.className = o.destructive
+    ? 'h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-colors'
+    : 'h-10 px-5 rounded-xl bg-ink-900 hover:bg-ink-800 text-white font-bold text-sm transition-colors';
+
+  if (iconWrap) {
+    if (o.destructive) {
+      iconWrap.className = 'w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-red-50 text-red-600';
+      iconWrap.innerHTML = '<i data-lucide="trash-2" class="w-6 h-6" aria-hidden="true"></i>';
+    } else if (o.icon === 'info') {
+      iconWrap.className = 'w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-brand-50 text-brand-600';
+      iconWrap.innerHTML = '<i data-lucide="info" class="w-6 h-6" aria-hidden="true"></i>';
+    } else {
+      iconWrap.className = 'w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-amber-50 text-amber-600';
+      iconWrap.innerHTML = '<i data-lucide="alert-triangle" class="w-6 h-6" aria-hidden="true"></i>';
+    }
+  }
+
+  _confirmDialogState.onConfirm = typeof o.onConfirm === 'function' ? o.onConfirm : null;
+  _confirmDialogState.onCancel = typeof o.onCancel === 'function' ? o.onCancel : null;
+  _confirmDialogState.previouslyFocused = document.activeElement;
+
+  backdrop.classList.remove('hidden');
+  backdrop.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => {
+    dialog.classList.remove('scale-95', 'opacity-0');
+    dialog.classList.add('scale-100', 'opacity-100');
+    setTimeout(() => confirmBtn.focus(), 60);
+  });
+
+  refreshIcons();
+
+  // Wire handlers (replace clones to clear previous listeners)
+  const newCancel = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+  newCancel.addEventListener('click', () => _closeConfirmDialog(true));
+
+  const newConfirm = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+  newConfirm.addEventListener('click', () => {
+    const cb = _confirmDialogState.onConfirm;
+    _confirmDialogState.onConfirm = null;
+    _confirmDialogState.onCancel = null;
+    _closeConfirmDialog(false);
+    if (typeof cb === 'function') {
+      try { cb(); } catch (e) { console.error(e); }
+    }
+  });
+
+  // Backdrop click closes
+  const backdropClickHandler = (e) => {
+    if (e.target === backdrop) {
+      backdrop.removeEventListener('click', backdropClickHandler);
+      _closeConfirmDialog(true);
+    }
+  };
+  backdrop.addEventListener('click', backdropClickHandler);
+
+  // Escape key closes
+  _confirmDialogState.keyHandler = (e) => {
+    if (e.key === 'Escape') _closeConfirmDialog(true);
+  };
+  document.addEventListener('keydown', _confirmDialogState.keyHandler);
+}
+
+window.openConfirmDialog = openConfirmDialog;
