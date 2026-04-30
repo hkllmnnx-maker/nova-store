@@ -112,10 +112,24 @@ export const WishlistPage: FC = () => {
               window.showToast && window.showToast('تمت الإزالة من المفضلة', 'info');
             },
             clearAll() {
-              if (!confirm('هل تريد فعلاً إفراغ قائمة المفضلة؟')) return;
-              window.Wishlist.clear();
-              this.load();
-              window.showToast && window.showToast('تم إفراغ القائمة', 'info');
+              const self = this;
+              const doClear = () => {
+                window.Wishlist.clear();
+                self.load();
+                window.showToast && window.showToast('تم إفراغ القائمة', 'info');
+              };
+              if (typeof window.openConfirmDialog === 'function') {
+                window.openConfirmDialog({
+                  title: 'إفراغ المفضلة',
+                  message: 'سيتم حذف جميع المنتجات من قائمة المفضلة. لا يمكن التراجع عن هذا الإجراء.',
+                  confirmText: 'نعم، إفراغ القائمة',
+                  cancelText: 'إلغاء',
+                  destructive: true,
+                  onConfirm: doClear
+                });
+              } else {
+                doClear();
+              }
             },
             moveToCart(item) {
               window.Cart.add({
