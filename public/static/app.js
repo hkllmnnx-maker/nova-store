@@ -402,3 +402,62 @@ function openConfirmDialog(opts) {
 }
 
 window.openConfirmDialog = openConfirmDialog;
+
+// =====================================================
+// Alpine component: Product Detail Page
+// =====================================================
+document.addEventListener('alpine:init', () => {
+  if (typeof Alpine === 'undefined') return;
+  Alpine.data('productPage', (product, images) => ({
+    product: product,
+    images: images || [product.image],
+    activeImage: 0,
+    qty: 1,
+    maxStock: product.stock || 0,
+    inWishlist: false,
+
+    init() {
+      // Sync wishlist state
+      try {
+        if (window.Wishlist && typeof window.Wishlist.has === 'function') {
+          this.inWishlist = window.Wishlist.has(product.id);
+        }
+      } catch (e) {}
+      document.addEventListener('wishlist:updated', () => {
+        try { this.inWishlist = window.Wishlist.has(product.id); } catch (e) {}
+      });
+    },
+
+    incQty() {
+      if (this.qty < this.maxStock) this.qty++;
+    },
+    decQty() {
+      if (this.qty > 1) this.qty--;
+    },
+
+    addToCart() {
+      if (this.maxStock === 0) {
+        if (typeof showToast === 'function') showToast('المنتج غير متوفر حالياً', 'warning');
+        return;
+      }
+      const q = Math.max(1, Math.min(parseInt(this.qty, 10) || 1, this.maxStock));
+      try {
+        window.Cart.add(this.product, q);
+      } catch (e) {
+        if (typeof showToast === 'function') showToast('حدث خطأ، حاول مرة أخرى', 'error');
+      }
+    },
+
+    buyNow() {
+      this.addToCart();
+      setTimeout(() => { window.location.href = '/cart'; }, 250);
+    },
+
+    toggleWishlist() {
+      try {
+        const isAdded = window.Wishlist.toggle(this.product);
+        this.inWishlist = !!isAdded;
+      } catch (e) {}
+    }
+  }));
+});

@@ -212,11 +212,11 @@ export const AdminPage: FC = () => {
                       </td>
                       <td class="px-5 py-3">
                         <div class="flex items-center gap-1">
-                          <button class="w-8 h-8 rounded-lg flex items-center justify-center text-ink-500 hover:bg-brand-50 hover:text-brand-600 transition-colors" title="عرض التفاصيل" {...{ '@click': 'alert(\'تفاصيل الطلب: \' + o.id + \'\\nالعميل: \' + o.customer + \'\\nالإجمالي: \' + o.total + \' ر.س\')' }}>
-                            <i data-lucide="eye" class="w-4 h-4"></i>
+                          <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-ink-500 hover:bg-brand-50 hover:text-brand-600 transition-colors" title="عرض التفاصيل" aria-label="عرض تفاصيل الطلب" {...{ '@click': 'viewOrder(o)' }}>
+                            <i data-lucide="eye" class="w-4 h-4" aria-hidden="true"></i>
                           </button>
-                          <button {...{ '@click': 'deleteOrder(o.id)' }} class="w-8 h-8 rounded-lg flex items-center justify-center text-ink-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="حذف">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                          <button type="button" {...{ '@click': 'deleteOrder(o.id)' }} class="w-8 h-8 rounded-lg flex items-center justify-center text-ink-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="حذف" aria-label="حذف الطلب">
+                            <i data-lucide="trash-2" class="w-4 h-4" aria-hidden="true"></i>
                           </button>
                         </div>
                       </td>
@@ -304,8 +304,69 @@ export const AdminPage: FC = () => {
           </div>
         </div>
 
+        {/* Order Details Modal */}
+        <div x-show="orderModalOpen" {...{ "x-cloak": "" }} class="fixed inset-0 z-[200] flex items-center justify-center p-4" {...{ 'x-transition.opacity': '' }} role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+          <div class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" {...{ '@click': 'closeOrderModal()' }}></div>
+          <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" {...{ "x-transition": "" }} x-show="selectedOrder">
+            <div class="flex items-center justify-between p-6 border-b border-ink-100 bg-gradient-to-l from-brand-50/40 to-white">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 text-white flex items-center justify-center">
+                  <i data-lucide="receipt" class="w-5 h-5" aria-hidden="true"></i>
+                </div>
+                <div>
+                  <h3 id="order-modal-title" class="font-display font-black text-xl text-ink-900">تفاصيل الطلب</h3>
+                  <div class="text-xs text-ink-500" x-text="selectedOrder && selectedOrder.id"></div>
+                </div>
+              </div>
+              <button type="button" {...{ '@click': 'closeOrderModal()' }} class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-ink-100 text-ink-500" aria-label="إغلاق">
+                <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-5" x-show="selectedOrder">
+              <template x-if="selectedOrder">
+                <div class="space-y-5">
+                  <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="bg-ink-50 rounded-xl p-4">
+                      <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1">العميل</div>
+                      <div class="font-bold text-ink-900" x-text="selectedOrder.customer"></div>
+                    </div>
+                    <div class="bg-ink-50 rounded-xl p-4">
+                      <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1">التاريخ</div>
+                      <div class="font-bold text-ink-900" x-text="selectedOrder.date"></div>
+                    </div>
+                    <div class="bg-ink-50 rounded-xl p-4">
+                      <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1">عدد المنتجات</div>
+                      <div class="font-bold text-ink-900" x-text="selectedOrder.items + ' منتج'"></div>
+                    </div>
+                    <div class="bg-ink-50 rounded-xl p-4">
+                      <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wider mb-1">الحالة</div>
+                      <span class="inline-block px-2 py-1 rounded-md text-xs font-bold" {...{ ':class': 'getStatusClass(selectedOrder.status)' }} x-text="selectedOrder.status"></span>
+                    </div>
+                  </div>
+
+                  <div class="bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl p-6 text-white">
+                    <div class="text-sm text-white/80 mb-1">الإجمالي</div>
+                    <div class="font-display font-black text-4xl flex items-baseline gap-2">
+                      <span x-text="selectedOrder.total.toLocaleString('ar-SA')"></span>
+                      <span class="text-base font-semibold">ر.س</span>
+                    </div>
+                  </div>
+
+                  <div class="bg-ink-50/60 border border-ink-100 rounded-xl p-4 text-xs text-ink-600 leading-relaxed flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" aria-hidden="true"></i>
+                    <span>هذه نسخة عرض من بيانات الطلب التجريبية. في النسخة الإنتاجية ستُعرض هنا تفاصيل المنتجات الكاملة وعنوان الشحن وطريقة الدفع.</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div class="p-6 border-t border-ink-100 flex items-center gap-3 justify-end bg-ink-50/40">
+              <button type="button" {...{ '@click': 'closeOrderModal()' }} class="h-11 px-5 rounded-xl border border-ink-200 hover:bg-white text-ink-700 font-semibold transition-colors">إغلاق</button>
+            </div>
+          </div>
+        </div>
+
         {/* Product Modal */}
-        <div x-show="modalOpen" {...{ "x-cloak": "" }} class="fixed inset-0 z-[200] flex items-center justify-center p-4" {...{ 'x-transition.opacity': '' }}>
+        <div x-show="modalOpen" {...{ "x-cloak": "" }} class="fixed inset-0 z-[200] flex items-center justify-center p-4" {...{ 'x-transition.opacity': '' }} role="dialog" aria-modal="true">
           <div class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" {...{ '@click': 'modalOpen = false' }}></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" {...{ "x-transition": "" }}>
             <div class="flex items-center justify-between p-6 border-b border-ink-100">
@@ -375,6 +436,8 @@ export const AdminPage: FC = () => {
               productCategoryFilter: '',
               orderStatusFilter: '',
               modalOpen: false,
+              orderModalOpen: false,
+              selectedOrder: null,
               editingProduct: { id: null, name: '', category: '', image: '', price: 0, oldPrice: null, stock: 0, rating: 5, description: '' },
 
               init() {
@@ -468,10 +531,20 @@ export const AdminPage: FC = () => {
               },
 
               deleteProduct(id) {
-                if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
-                this.productsData = this.productsData.filter(p => p.id !== id);
-                this.persist();
-                showToast('تم حذف المنتج', 'info');
+                const product = this.productsData.find(p => p.id === id);
+                const name = product ? product.name : 'هذا المنتج';
+                openConfirmDialog({
+                  title: 'حذف المنتج',
+                  message: 'سيتم حذف "' + name + '" نهائياً من المتجر. لا يمكن التراجع عن هذا الإجراء.',
+                  confirmText: 'نعم، احذف المنتج',
+                  cancelText: 'إلغاء',
+                  destructive: true,
+                  onConfirm: () => {
+                    this.productsData = this.productsData.filter(p => p.id !== id);
+                    this.persist();
+                    showToast('تم حذف المنتج', 'info');
+                  }
+                });
               },
 
               updateOrderStatus(id, status) {
@@ -484,10 +557,29 @@ export const AdminPage: FC = () => {
               },
 
               deleteOrder(id) {
-                if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
-                this.ordersData = this.ordersData.filter(o => o.id !== id);
-                this.persist();
-                showToast('تم حذف الطلب', 'info');
+                openConfirmDialog({
+                  title: 'حذف الطلب',
+                  message: 'سيتم حذف الطلب ' + id + ' من السجلات. هذا الإجراء غير قابل للتراجع.',
+                  confirmText: 'نعم، احذف الطلب',
+                  cancelText: 'إلغاء',
+                  destructive: true,
+                  onConfirm: () => {
+                    this.ordersData = this.ordersData.filter(o => o.id !== id);
+                    this.persist();
+                    showToast('تم حذف الطلب', 'info');
+                  }
+                });
+              },
+
+              viewOrder(order) {
+                this.selectedOrder = order;
+                this.orderModalOpen = true;
+                setTimeout(() => refreshIcons(), 50);
+              },
+
+              closeOrderModal() {
+                this.orderModalOpen = false;
+                this.selectedOrder = null;
               }
             }))
           });

@@ -6,7 +6,7 @@ import { type Product, getRelatedProducts } from '../data/products'
 export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
   const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0
   const related = getRelatedProducts(product.id, product.category, 4)
-  const productData = JSON.stringify({
+  const productPayload = {
     id: product.id,
     name: product.name,
     price: product.price,
@@ -14,7 +14,9 @@ export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
     image: product.image,
     categoryAr: product.categoryAr,
     stock: product.stock
-  }).replace(/"/g, '&quot;')
+  }
+  // For data-* attribute (HTML-encoded JSON)
+  const productDataAttr = JSON.stringify(productPayload).replace(/"/g, '&quot;')
 
   // مراجعات تجريبية
   const reviews = [
@@ -37,7 +39,7 @@ export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
           <span class="text-ink-900 font-medium line-clamp-1">{product.name}</span>
         </nav>
 
-        <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12" x-data={`{ activeImage: 0, qty: 1, images: ${JSON.stringify(product.images)}, maxStock: ${product.stock} }`}>
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12" x-data={`productPage(${JSON.stringify(productPayload)}, ${JSON.stringify(product.images)})`}>
           {/* Images */}
           <div>
             <div class="bg-white rounded-2xl border border-ink-100 overflow-hidden mb-4 relative aspect-square">
@@ -163,23 +165,30 @@ export const ProductDetailPage: FC<{ product: Product }> = ({ product }) => {
               <div class="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  class="flex-1 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-brand-500/30 transition-all active:scale-[0.98]"
-                  onclick={`Cart.add(${productData.replace(/&quot;/g, '"')}, document.querySelector('[x-data]').__x.$data.qty)`}
-                  disabled={product.stock === 0}
+                  class="flex-1 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-brand-500/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  {...{ '@click': 'addToCart()' }}
+                  {...{ ':disabled': 'maxStock === 0' }}
                 >
                   <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                   <span>إضافة إلى السلة</span>
                 </button>
                 <button
                   type="button"
-                  class="h-12 px-6 rounded-xl border border-ink-200 bg-white hover:border-ink-900 hover:bg-ink-900 hover:text-white text-ink-900 font-semibold flex items-center justify-center gap-2 transition-all"
-                  onclick={`Cart.add(${productData.replace(/&quot;/g, '"')}, document.querySelector('[x-data]').__x.$data.qty); window.location.href='/cart'`}
+                  class="h-12 px-6 rounded-xl border border-ink-200 bg-white hover:border-ink-900 hover:bg-ink-900 hover:text-white text-ink-900 font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  {...{ '@click': 'buyNow()' }}
+                  {...{ ':disabled': 'maxStock === 0' }}
                 >
                   <i data-lucide="zap" class="w-5 h-5"></i>
                   <span>اشترِ الآن</span>
                 </button>
-                <button class="w-12 h-12 rounded-xl border border-ink-200 bg-white hover:border-red-300 hover:text-red-500 text-ink-700 flex items-center justify-center transition-all" aria-label="مفضلة">
-                  <i data-lucide="heart" class="w-5 h-5"></i>
+                <button
+                  type="button"
+                  class="w-12 h-12 rounded-xl border border-ink-200 bg-white hover:border-red-300 text-ink-700 flex items-center justify-center transition-all"
+                  {...{ ':class': 'inWishlist ? \'text-red-500 border-red-300 bg-red-50\' : \'\'' }}
+                  {...{ '@click': 'toggleWishlist()' }}
+                  aria-label="إضافة إلى المفضلة"
+                >
+                  <i data-lucide="heart" class="w-5 h-5" {...{ ':class': 'inWishlist ? \'fill-current\' : \'\'' }}></i>
                 </button>
               </div>
             </div>
