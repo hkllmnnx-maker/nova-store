@@ -164,23 +164,56 @@ export const CheckoutPage: FC = () => {
               {/* Card Details (shown only if card payment selected) */}
               <div x-show="form.payment === 'card'" {...{ "x-transition": "" }} class="mt-5 pt-5 border-t border-ink-100 grid sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2">
-                  <label class="form-label">رقم البطاقة</label>
+                  <label class="form-label">رقم البطاقة <span class="text-red-500">*</span></label>
                   <div class="relative">
-                    <input type="text" maxlength="19" placeholder="0000 0000 0000 0000" class="form-input pr-12" {...{ '@input': '$event.target.value = $event.target.value.replace(/\\D/g,\'\').replace(/(\\d{4})(?=\\d)/g,\'$1 \')' }} />
-                    <i data-lucide="credit-card" class="w-5 h-5 absolute top-1/2 -translate-y-1/2 right-3 text-ink-400"></i>
+                    <input
+                      type="text"
+                      x-model="form.cardNumber"
+                      maxlength="23"
+                      inputmode="numeric"
+                      autocomplete="cc-number"
+                      placeholder="0000 0000 0000 0000"
+                      class="form-input pr-12"
+                      {...{ ':class': 'errors.cardNumber && \'error\'', '@input': 'form.cardNumber = $event.target.value.replace(/\\D/g,\'\').replace(/(\\d{4})(?=\\d)/g,\'$1 \').slice(0,23)' }}
+                      aria-label="رقم البطاقة"
+                    />
+                    <i data-lucide="credit-card" class="w-5 h-5 absolute top-1/2 -translate-y-1/2 right-3 text-ink-400" aria-hidden="true"></i>
                   </div>
+                  <span x-show="errors.cardNumber" x-text="errors.cardNumber" class="text-xs text-red-500 mt-1 block"></span>
                 </div>
                 <div>
-                  <label class="form-label">تاريخ الانتهاء</label>
-                  <input type="text" maxlength="5" placeholder="MM/YY" class="form-input" />
+                  <label class="form-label">تاريخ الانتهاء <span class="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    x-model="form.cardExpiry"
+                    maxlength="5"
+                    inputmode="numeric"
+                    autocomplete="cc-exp"
+                    placeholder="MM/YY"
+                    class="form-input"
+                    {...{ ':class': 'errors.cardExpiry && \'error\'', '@input': 'form.cardExpiry = $event.target.value.replace(/[^0-9/]/g,\'\').replace(/^(\\d{2})(\\d)/, \'$1/$2\').slice(0,5)' }}
+                    aria-label="تاريخ انتهاء البطاقة"
+                  />
+                  <span x-show="errors.cardExpiry" x-text="errors.cardExpiry" class="text-xs text-red-500 mt-1 block"></span>
                 </div>
                 <div>
-                  <label class="form-label">CVV</label>
-                  <input type="text" maxlength="4" placeholder="123" class="form-input" />
+                  <label class="form-label">CVV <span class="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    x-model="form.cardCvv"
+                    maxlength="4"
+                    inputmode="numeric"
+                    autocomplete="cc-csc"
+                    placeholder="123"
+                    class="form-input"
+                    {...{ ':class': 'errors.cardCvv && \'error\'', '@input': 'form.cardCvv = $event.target.value.replace(/\\D/g,\'\').slice(0,4)' }}
+                    aria-label="CVV"
+                  />
+                  <span x-show="errors.cardCvv" x-text="errors.cardCvv" class="text-xs text-red-500 mt-1 block"></span>
                 </div>
                 <div class="sm:col-span-2 flex items-center gap-2 text-xs text-ink-500">
-                  <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500"></i>
-                  <span>بياناتك محمية بتشفير SSL 256-bit</span>
+                  <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500" aria-hidden="true"></i>
+                  <span>بياناتك محمية بتشفير SSL 256-bit (وضع تجريبي — لن يتم تنفيذ دفع حقيقي)</span>
                 </div>
               </div>
             </div>
@@ -230,8 +263,15 @@ export const CheckoutPage: FC = () => {
                   <span class="font-bold text-ink-900"><span x-text="subtotal.toLocaleString('ar-SA')"></span> ر.س</span>
                 </div>
                 <div class="flex items-center justify-between text-sm" x-show="savings > 0">
-                  <span class="text-emerald-600">الخصم</span>
+                  <span class="text-emerald-600">وفّرت</span>
                   <span class="font-bold text-emerald-600">-<span x-text="savings.toLocaleString('ar-SA')"></span> ر.س</span>
+                </div>
+                <div class="flex items-center justify-between text-sm" x-show="couponDiscount > 0">
+                  <span class="text-violet-600 flex items-center gap-1.5">
+                    <i data-lucide="ticket" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                    <span>كوبون <span class="font-bold" x-text="couponCode"></span></span>
+                  </span>
+                  <span class="font-bold text-violet-600">-<span x-text="couponDiscount.toLocaleString('ar-SA')"></span> ر.س</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <span class="text-ink-600">الشحن</span>
@@ -276,13 +316,15 @@ export const CheckoutPage: FC = () => {
             Alpine.data('checkoutPage', () => ({
               items: [],
               subtotal: 0, savings: 0, shipping: 0, total: 0,
+              couponDiscount: 0, couponCode: '',
               loading: false,
               errors: {},
               form: {
                 fullName: '', phone: '', email: '',
                 city: '', district: '', address: '', postal: '', notes: '',
                 payment: 'card',
-                terms: false
+                terms: false,
+                cardNumber: '', cardExpiry: '', cardCvv: ''
               },
               init() {
                 this.refresh();
@@ -293,40 +335,108 @@ export const CheckoutPage: FC = () => {
                 this.subtotal = Cart.subtotal();
                 this.savings = Cart.savings();
                 this.shipping = Cart.shipping();
+                this.couponDiscount = Cart.couponDiscount();
                 this.total = Cart.total();
+                const c = Coupon.get();
+                this.couponCode = c ? c.code : '';
               },
               validate() {
                 this.errors = {};
-                if (!this.form.fullName || this.form.fullName.trim().length < 3) this.errors.fullName = 'الاسم الكامل مطلوب (3 أحرف على الأقل)';
-                if (!/^(05)[0-9]{8}$/.test(this.form.phone)) this.errors.phone = 'رقم الجوال يجب أن يبدأ بـ 05 ويحتوي على 10 أرقام';
-                if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(this.form.email)) this.errors.email = 'بريد إلكتروني غير صالح';
-                if (!this.form.address || this.form.address.trim().length < 10) this.errors.address = 'العنوان التفصيلي مطلوب (10 أحرف على الأقل)';
-                if (!this.form.city) { showToast('الرجاء اختيار المدينة','error'); return false; }
-                if (!this.form.terms) { showToast('يجب الموافقة على الشروط والأحكام','error'); return false; }
-                if (Object.keys(this.errors).length > 0) { showToast('الرجاء تصحيح الأخطاء في النموذج', 'error'); return false; }
+                if (!this.form.fullName || this.form.fullName.trim().length < 3) {
+                  this.errors.fullName = 'الاسم الكامل مطلوب (3 أحرف على الأقل)';
+                }
+                if (!/^(05)[0-9]{8}$/.test((this.form.phone || '').replace(/\\s/g,''))) {
+                  this.errors.phone = 'رقم الجوال يجب أن يبدأ بـ 05 ويحتوي على 10 أرقام';
+                }
+                if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(this.form.email || '')) {
+                  this.errors.email = 'بريد إلكتروني غير صالح';
+                }
+                if (!this.form.address || this.form.address.trim().length < 10) {
+                  this.errors.address = 'العنوان التفصيلي مطلوب (10 أحرف على الأقل)';
+                }
+                if (!this.form.city) {
+                  this.errors.city = 'الرجاء اختيار المدينة';
+                }
+                if (this.form.payment === 'card') {
+                  const num = (this.form.cardNumber || '').replace(/\\s/g,'');
+                  if (num.length < 13 || num.length > 19 || !/^\\d+$/.test(num)) {
+                    this.errors.cardNumber = 'رقم بطاقة غير صالح';
+                  }
+                  if (!/^(0[1-9]|1[0-2])\\/?([0-9]{2})$/.test((this.form.cardExpiry || '').replace(/\\s/g,''))) {
+                    this.errors.cardExpiry = 'تاريخ انتهاء غير صالح (MM/YY)';
+                  }
+                  if (!/^[0-9]{3,4}$/.test(this.form.cardCvv || '')) {
+                    this.errors.cardCvv = 'CVV غير صالح';
+                  }
+                }
+                if (!this.form.terms) {
+                  showToast('يجب الموافقة على الشروط والأحكام', 'error');
+                  return false;
+                }
+                if (Object.keys(this.errors).length > 0) {
+                  showToast('الرجاء تصحيح الأخطاء في النموذج', 'error');
+                  // Scroll to first error
+                  setTimeout(() => {
+                    const firstError = document.querySelector('.form-input.error, [aria-invalid="true"]');
+                    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 50);
+                  return false;
+                }
                 return true;
               },
-              placeOrder() {
+              async placeOrder() {
+                if (this.items.length === 0) {
+                  showToast('السلة فارغة', 'error');
+                  return;
+                }
                 if (!this.validate()) return;
                 this.loading = true;
 
-                // Simulate processing
-                setTimeout(() => {
-                  const order = {
-                    id: Orders.generateId(),
-                    date: new Date().toISOString(),
-                    customer: { ...this.form },
-                    items: this.items,
-                    subtotal: this.subtotal,
-                    savings: this.savings,
-                    shipping: this.shipping,
-                    total: this.total,
-                    status: 'قيد المعالجة'
-                  };
-                  Orders.save(order);
+                const coupon = Coupon.get();
+                const payload = {
+                  customer: {
+                    fullName: this.form.fullName.trim(),
+                    phone: this.form.phone.replace(/\\s/g,''),
+                    email: this.form.email.trim(),
+                    city: this.form.city,
+                    district: this.form.district,
+                    address: this.form.address.trim(),
+                    postal: this.form.postal,
+                    notes: this.form.notes
+                  },
+                  payment: this.form.payment,
+                  items: this.items.map(i => ({ id: i.id, quantity: i.quantity })),
+                  coupon: coupon ? coupon.code : ''
+                };
+
+                try {
+                  const r = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                  });
+                  const data = await r.json();
+                  if (!data.ok) {
+                    const errMap = {
+                      invalid_name: 'الاسم غير صالح',
+                      invalid_phone: 'رقم الجوال غير صالح',
+                      invalid_email: 'البريد الإلكتروني غير صالح',
+                      invalid_city: 'الرجاء اختيار المدينة',
+                      invalid_address: 'العنوان غير صالح',
+                      empty_cart: 'السلة فارغة'
+                    };
+                    showToast(errMap[data.error] || 'فشل في إنشاء الطلب. الرجاء المحاولة مرة أخرى.', 'error');
+                    this.loading = false;
+                    return;
+                  }
+                  // Save the validated server-side order locally for the success page
+                  Orders.save(data.order);
                   Cart.clear();
-                  window.location.href = '/order-success?id=' + order.id;
-                }, 1500);
+                  window.location.href = '/order-success?id=' + encodeURIComponent(data.order.id);
+                } catch (e) {
+                  showToast('تعذّر الاتصال بالخادم. تحقّق من اتصالك ثم حاول مرة أخرى.', 'error');
+                  this.loading = false;
+                }
               }
             }))
           });
