@@ -78,6 +78,10 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
                 <i data-lucide="truck" class="w-3.5 h-3.5"></i>
                 <span>شحن مجاني للطلبات +500 ر.س</span>
               </span>
+              <a href="/track" class="text-ink-300 hover:text-white transition-colors flex items-center gap-1.5">
+                <i data-lucide="package-search" class="w-3.5 h-3.5"></i>
+                <span>تتبع الطلب</span>
+              </a>
               <a href="/admin" class="text-ink-300 hover:text-white transition-colors flex items-center gap-1.5">
                 <i data-lucide="shield" class="w-3.5 h-3.5"></i>
                 <span>لوحة الإدارة</span>
@@ -366,6 +370,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
                   <li><a href="/products?onsale=1" class="hover:text-brand-400 transition-colors">العروض الحصرية</a></li>
                   <li><a href="/categories" class="hover:text-brand-400 transition-colors">التصنيفات</a></li>
                   <li><a href="/wishlist" class="hover:text-brand-400 transition-colors">المفضلة</a></li>
+                  <li><a href="/track" class="hover:text-brand-400 transition-colors">تتبع الطلب</a></li>
                   <li><a href="/admin" class="hover:text-brand-400 transition-colors">لوحة الإدارة</a></li>
                 </ul>
               </div>
