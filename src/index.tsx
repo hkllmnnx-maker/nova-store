@@ -10,7 +10,10 @@ import { CategoriesPage } from './pages/categories'
 import { SearchPage } from './pages/search'
 import { WishlistPage } from './pages/wishlist'
 import { LoginPage } from './pages/login'
+import { AdminLoginPage } from './pages/admin-login'
+import { TrackPage } from './pages/track'
 import { getProductById } from './data/products'
+import { isAdminRequest, clearAdminCookie } from './lib/auth'
 import api from './api/index'
 
 const app = new Hono()
@@ -126,8 +129,33 @@ app.get('/order-success', (c) => {
   return c.html('<!DOCTYPE html>' + (OrderSuccessPage({ orderId: id }) as any).toString())
 })
 
-// لوحة الإدارة
-app.get('/admin', (c) => c.html('<!DOCTYPE html>' + (AdminPage({}) as any).toString()))
+// تتبع الطلب (للعميل)
+app.get('/track', (c) => {
+  const id = c.req.query('id') || ''
+  return c.html('<!DOCTYPE html>' + (TrackPage({ id }) as any).toString())
+})
+
+// تسجيل دخول الإدارة
+app.get('/admin/login', (c) => {
+  // Already logged-in? redirect to /admin
+  if (isAdminRequest(c)) return c.redirect('/admin', 302)
+  const next = c.req.query('next') || '/admin'
+  return c.html('<!DOCTYPE html>' + (AdminLoginPage({ next }) as any).toString())
+})
+
+// تسجيل خروج الإدارة (مسح الكوكي ثم إعادة توجيه)
+app.get('/admin/logout', (c) => {
+  clearAdminCookie(c)
+  return c.redirect('/admin/login', 302)
+})
+
+// لوحة الإدارة (محمية على مستوى الـ route)
+app.get('/admin', (c) => {
+  if (!isAdminRequest(c)) {
+    return c.redirect('/admin/login?next=' + encodeURIComponent('/admin'), 302)
+  }
+  return c.html('<!DOCTYPE html>' + (AdminPage({}) as any).toString())
+})
 
 // 404
 app.notFound((c) => {
