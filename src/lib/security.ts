@@ -61,3 +61,14 @@ export function safeEnum<T extends string>(input: unknown, allowed: readonly T[]
   const v = String(input ?? '')
   return (allowed as readonly string[]).includes(v) ? (v as T) : def
 }
+
+// التحقق من URL آمن (https/http فقط)
+export function isValidUrl(input: string): boolean {
+  if (typeof input !== 'string' || input.length > 2000) return false
+  try {
+    const u = new URL(input)
+    return u.protocol === 'https:' || u.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
